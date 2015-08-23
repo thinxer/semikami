@@ -1,4 +1,7 @@
 language: go
-
 go:
-- tip
+- 1.5
+install:
+- go get gopkg.in/thinxer/semikami.v2
+script:
+- go test -v gopkg.in/thinxer/semikami.v2/...
