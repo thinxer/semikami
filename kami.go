@@ -1,4 +1,4 @@
-package kami
+package kami // import "gopkg.in/thinxer/semikami.v2"
 
 import (
 	"net/http"
