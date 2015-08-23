@@ -18,13 +18,14 @@ type (
 	Middleware BeforeFunc
 )
 
+// Builder provides fluent APIs for a minimal middleware framework.
 type Builder struct {
 	router  *httprouter.Router
 	pre     WrapFunc
 	befores []BeforeFunc
 }
 
-// New creates a Kami Builder. All builders derived from the same root builder shares the same router.
+// New creates a Builder. All builders derived from the same root builder shares the same router.
 func New(router *httprouter.Router) Builder {
 	if router == nil {
 		router = httprouter.New()
@@ -77,6 +78,7 @@ func (b Builder) Wrap(f WrapFunc) Builder {
 	}
 }
 
+// Handle creates the router entry for h.
 func (b Builder) Handle(method string, path string, h HandlerFunc) {
 	b.router.Handle(method, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := context.Background()
@@ -90,32 +92,23 @@ func (b Builder) Handle(method string, path string, h HandlerFunc) {
 	})
 }
 
-func (b Builder) Get(path string, h HandlerFunc) {
-	b.Handle("GET", path, h)
-}
+// Get creates router entry for h with GET method.
+func (b Builder) Get(path string, h HandlerFunc) { b.Handle("GET", path, h) }
 
-func (b Builder) Post(path string, h HandlerFunc) {
-	b.Handle("POST", path, h)
-}
-func (b Builder) Put(path string, h HandlerFunc) {
-	b.Handle("PUT", path, h)
-}
+// Post creates router entry for h with POST method.
+func (b Builder) Post(path string, h HandlerFunc) { b.Handle("POST", path, h) }
 
-func (b Builder) Delete(path string, h HandlerFunc) {
-	b.Handle("DELETE", path, h)
-}
+// Delete creates router entry for h with DELETE method.
+func (b Builder) Delete(path string, h HandlerFunc) { b.Handle("DELETE", path, h) }
 
-func (b Builder) Patch(path string, h HandlerFunc) {
-	b.Handle("PATCH", path, h)
-}
+// Patch creates router entry for h with PATCH method.
+func (b Builder) Patch(path string, h HandlerFunc) { b.Handle("PATCH", path, h) }
 
-func (b Builder) Head(path string, h HandlerFunc) {
-	b.Handle("HEAD", path, h)
-}
+// Head creates router entry for h with HEAD method.
+func (b Builder) Head(path string, h HandlerFunc) { b.Handle("HEAD", path, h) }
 
-func (b Builder) Options(path string, h HandlerFunc) {
-	b.Handle("OPTIONS", path, h)
-}
+// Options creates router entry for h with OPTIONS method.
+func (b Builder) Options(path string, h HandlerFunc) { b.Handle("OPTIONS", path, h) }
 
 type contextKeyType int
 
@@ -123,6 +116,7 @@ const (
 	paramKey contextKeyType = iota
 )
 
+// Param extracts the named route param from the context.
 func Param(ctx context.Context, name string) string {
 	params, ok := ctx.Value(paramKey).(httprouter.Params)
 	if !ok {
