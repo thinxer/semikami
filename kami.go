@@ -11,11 +11,9 @@ type (
 	// BeforeFunc runs before the actual handler. The pipeline gets canceled when nil is returned.
 	BeforeFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context
 	// WrapFunc is more like a traditional middleware, where it calls next to continue the execution.
-	WrapFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, next HandlerFunc)
+	WrapFunc func(next HandlerFunc) HandlerFunc
 	// HandlerFunc is at the end of the execution.
 	HandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request)
-	// Middleware is the old name of BeforeFunc.
-	Middleware BeforeFunc
 )
 
 // Builder provides fluent APIs for a minimal middleware framework.
@@ -32,8 +30,8 @@ func New(router *httprouter.Router) Builder {
 	}
 	return Builder{
 		router: router,
-		pre: func(ctx context.Context, w http.ResponseWriter, r *http.Request, next HandlerFunc) {
-			next(ctx, w, r)
+		pre: func(next HandlerFunc) HandlerFunc {
+			return next
 		},
 	}
 }
@@ -67,12 +65,13 @@ func (b Builder) With(m BeforeFunc) Builder {
 func (b Builder) Wrap(f WrapFunc) Builder {
 	return Builder{
 		router: b.router,
-		pre: func(ctx context.Context, w http.ResponseWriter, r *http.Request, next HandlerFunc) {
-			b.pre(ctx, w, r, func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		pre: func(next HandlerFunc) HandlerFunc {
+			wrapped := f(next)
+			return b.pre(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 				if ctx = b.runthrough(ctx, w, r); ctx == nil {
 					return
 				}
-				f(ctx, w, r, next)
+				wrapped(ctx, w, r)
 			})
 		},
 	}
@@ -80,15 +79,16 @@ func (b Builder) Wrap(f WrapFunc) Builder {
 
 // Handle creates the router entry for h.
 func (b Builder) Handle(method string, path string, h HandlerFunc) {
+	wrapped := b.pre(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		if ctx = b.runthrough(ctx, w, r); ctx == nil {
+			return
+		}
+		h(ctx, w, r)
+	})
 	b.router.Handle(method, path, func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, paramKey, ps)
-		b.pre(ctx, w, r, func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-			if ctx = b.runthrough(ctx, w, r); ctx == nil {
-				return
-			}
-			h(ctx, w, r)
-		})
+		wrapped(ctx, w, r)
 	})
 }
 

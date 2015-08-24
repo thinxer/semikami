@@ -12,9 +12,17 @@ func TestWrap(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	kami := New(nil).With(func(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
 		return context.WithValue(ctx, 1, 2)
-	}).Wrap(func(ctx context.Context, w http.ResponseWriter, r *http.Request, next HandlerFunc) {
-		next(context.WithValue(ctx, 2, 3), w, r)
+	}).Wrap(func(next HandlerFunc) HandlerFunc {
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+			if ctx.Value(1) == nil {
+				t.Fatal("sequence error")
+			}
+			next(context.WithValue(ctx, 2, 3), w, r)
+		}
 	}).With(func(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context {
+		if ctx.Value(2) == nil {
+			t.Fatal("sequence error")
+		}
 		return context.WithValue(ctx, 3, 5)
 	})
 	kami.Get("/:key", func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
