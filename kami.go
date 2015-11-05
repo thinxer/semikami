@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	// BeforeFunc runs before the actual handler. The pipeline gets canceled when nil is returned.
-	BeforeFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context
+	// FilterFunc runs before the actual handler. The pipeline gets canceled when nil is returned.
+	FilterFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) context.Context
 	// WrapFunc is more like a traditional middleware, where it calls next to continue the execution.
 	WrapFunc func(next HandlerFunc) HandlerFunc
 	// HandlerFunc is at the end of the execution.
@@ -20,7 +20,7 @@ type (
 type Builder struct {
 	router  *httprouter.Router
 	pre     WrapFunc
-	befores []BeforeFunc
+	befores []FilterFunc
 }
 
 // New creates a Builder. All builders derived from the same root builder shares the same router.
@@ -52,7 +52,7 @@ func (b Builder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // With creates a Builder by copying the parent Builder and appending middleware m.
-func (b Builder) With(m BeforeFunc) Builder {
+func (b Builder) With(m FilterFunc) Builder {
 	n := len(b.befores)
 	return Builder{
 		router:  b.router,
