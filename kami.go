@@ -101,6 +101,9 @@ func (b Builder) Post(path string, h HandlerFunc) { b.Handle("POST", path, h) }
 // Delete creates router entry for h with DELETE method.
 func (b Builder) Delete(path string, h HandlerFunc) { b.Handle("DELETE", path, h) }
 
+// Put creates router entry for h with PUT method.
+func (b Builder) Put(path string, h HandlerFunc) { b.Handle("PUT", path, h) }
+
 // Patch creates router entry for h with PATCH method.
 func (b Builder) Patch(path string, h HandlerFunc) { b.Handle("PATCH", path, h) }
 
