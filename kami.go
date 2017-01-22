@@ -1,10 +1,10 @@
 package kami // import "gopkg.in/thinxer/semikami.v2"
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/net/context"
 )
 
 type (

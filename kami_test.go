@@ -1,11 +1,10 @@
 package kami
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"golang.org/x/net/context"
 )
 
 func TestWrap(t *testing.T) {
